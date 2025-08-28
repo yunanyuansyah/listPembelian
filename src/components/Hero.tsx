@@ -53,7 +53,7 @@ export default function Hero() {
     logout();
   };
   return (
-    <section className="relative bg-gradient-to-br from-white via-grey-600 to-cyan-200 overflow-hidden">
+    <section className="relative bg-gradient-to-br from-white via-grey-600 to-cyan-200 overflow-hidden min-h-screen flex items-center">
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-black opacity-10"></div>
       <div className="absolute inset-0">
@@ -64,7 +64,7 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 w-full">
         <div className="text-center">
           {/* Main Heading */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-black mb-6 leading-tight">
