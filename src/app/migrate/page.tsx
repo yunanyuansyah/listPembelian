@@ -1,10 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+
+interface MigrationResult {
+  message: string;
+  success: boolean;
+  count?: number;
+}
 
 export default function MigratePage() {
   const [isMigrating, setIsMigrating] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<MigrationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleMigrate = async () => {
@@ -81,8 +88,8 @@ export default function MigratePage() {
           <div className="mt-8 pt-6 border-t border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Next Steps</h3>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li>• Visit <a href="/products" className="text-blue-500 hover:underline">/products</a> to view your migrated data</li>
-              <li>• Use the "Add New Product" button to add more products</li>
+              <li>• Visit <Link href="/products" className="text-blue-500 hover:underline">/products</Link> to view your migrated data</li>
+              <li>• Use the &quot;Add New Product&quot; button to add more products</li>
               <li>• Edit or delete products directly from the product list</li>
             </ul>
           </div>

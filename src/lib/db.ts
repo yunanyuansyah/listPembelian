@@ -49,13 +49,35 @@ export async function getProductById(id: number): Promise<ListPembelian | null> 
 // Create new product
 export async function createProduct(product: Omit<ListPembelian, 'id' | 'created_at'>): Promise<ListPembelian> {
   try {
+    console.log('Creating product with data:', product);
+    console.log('Data types:', {
+      nama: typeof product.nama,
+      deskripsi: typeof product.deskripsi,
+      harga: typeof product.harga,
+      stok: typeof product.stok,
+      total_harga: typeof product.total_harga
+    });
+    
     const { rows } = await pool.query<ListPembelian>(
-      'INSERT INTO listPembelian (nama, deskripsi, harga, stok, total_harga) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [product.nama, product.deskripsi, product.harga, product.stok, product.total_harga]
+      'INSERT INTO listPembelian (nama, deskripsi, harga, stok, total_harga, image_path) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [product.nama, product.deskripsi, product.harga, product.stok, product.total_harga, product.image_path]
     );
+    
+    console.log('Product created successfully:', rows[0]);
     return rows[0];
   } catch (error) {
     console.error('Error creating product:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      product: product
+    });
+    
+    // Check if it's a database constraint error
+    if (error instanceof Error && error.message.includes('violates')) {
+      throw new Error(`Database constraint error: ${error.message}`);
+    }
+    
     throw new Error('Failed to create product');
   }
 }
@@ -63,13 +85,36 @@ export async function createProduct(product: Omit<ListPembelian, 'id' | 'created
 // Update product
 export async function updateProduct(id: number, product: Partial<Omit<ListPembelian, 'id' | 'created_at'>>): Promise<ListPembelian> {
   try {
+    console.log('Updating product with data:', product);
+    console.log('Data types:', {
+      nama: typeof product.nama,
+      deskripsi: typeof product.deskripsi,
+      harga: typeof product.harga,
+      stok: typeof product.stok,
+      total_harga: typeof product.total_harga,
+      image_path: typeof product.image_path
+    });
+    
     const { rows } = await pool.query<ListPembelian>(
-      'UPDATE listPembelian SET nama = COALESCE($1, nama), deskripsi = COALESCE($2, deskripsi), harga = COALESCE($3, harga), stok = COALESCE($4, stok), total_harga = COALESCE($5, total_harga) WHERE id = $6 RETURNING *',
-      [product.nama, product.deskripsi, product.harga, product.stok, product.total_harga, id]
+      'UPDATE listPembelian SET nama = COALESCE($1, nama), deskripsi = COALESCE($2, deskripsi), harga = COALESCE($3, harga), stok = COALESCE($4, stok), total_harga = COALESCE($5, total_harga), image_path = COALESCE($6, image_path) WHERE id = $7 RETURNING *',
+      [product.nama, product.deskripsi, product.harga, product.stok, product.total_harga, product.image_path, id]
     );
+    
+    console.log('Product updated successfully:', rows[0]);
     return rows[0];
   } catch (error) {
     console.error('Error updating product:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      product: product
+    });
+    
+    // Check if it's a database constraint error
+    if (error instanceof Error && error.message.includes('violates')) {
+      throw new Error(`Database constraint error: ${error.message}`);
+    }
+    
     throw new Error('Failed to update product');
   }
 }
@@ -81,7 +126,7 @@ export async function deleteProduct(id: number): Promise<boolean> {
       'DELETE FROM listPembelian WHERE id = $1',
       [id]
     );
-    return rowCount > 0;
+    return (rowCount ?? 0) > 0;
   } catch (error) {
     console.error('Error deleting product:', error);
     throw new Error('Failed to delete product');
@@ -148,9 +193,15 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 // Create new user
 export async function createUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
   try {
+    // Import password utilities
+    const { hashPassword } = await import('./auth/password');
+    
+    // Hash the password before storing
+    const hashedPassword = await hashPassword(user.password);
+    
     const { rows } = await pool.query<User>(
       'INSERT INTO users (nama, email, password, nomor, status) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [user.nama, user.email, user.password, user.nomor, user.status]
+      [user.nama, user.email, hashedPassword, user.nomor, user.status]
     );
     return rows[0];
   } catch (error) {
@@ -162,9 +213,17 @@ export async function createUser(user: Omit<User, 'id' | 'created_at' | 'updated
 // Update user
 export async function updateUser(id: number, user: Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>): Promise<User> {
   try {
+    let hashedPassword = user.password;
+    
+    // If password is being updated, hash it
+    if (user.password) {
+      const { hashPassword } = await import('./auth/password');
+      hashedPassword = await hashPassword(user.password);
+    }
+    
     const { rows } = await pool.query<User>(
       'UPDATE users SET nama = COALESCE($1, nama), email = COALESCE($2, email), password = COALESCE($3, password), nomor = COALESCE($4, nomor), status = COALESCE($5, status), updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING *',
-      [user.nama, user.email, user.password, user.nomor, user.status, id]
+      [user.nama, user.email, hashedPassword, user.nomor, user.status, id]
     );
     return rows[0];
   } catch (error) {
@@ -180,29 +239,47 @@ export async function deleteUser(id: number): Promise<boolean> {
       'DELETE FROM users WHERE id = $1',
       [id]
     );
-    return rowCount > 0;
+    return (rowCount ?? 0) > 0;
   } catch (error) {
     console.error('Error deleting user:', error);
     throw new Error('Failed to delete user');
   }
 }
 
-// Update user status (admin/user)
-export async function updateUserStatus(id: number, status: 'admin' | 'user'): Promise<User> {
+// Update user status (admin/mods/user)
+export async function updateUserStatus(id: number, status: 'admin' | 'mods' | 'user'): Promise<User> {
   try {
+    console.log(`Updating user ${id} status to ${status}`);
+    
     const { rows } = await pool.query<User>(
       'UPDATE users SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
       [status, id]
     );
+    
+    if (rows.length === 0) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+    
+    console.log(`Successfully updated user ${id} status to ${status}`);
     return rows[0];
   } catch (error) {
     console.error('Error updating user status:', error);
+    console.error('Error details:', {
+      userId: id,
+      newStatus: status,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+    
+    // Re-throw with more specific error message
+    if (error instanceof Error) {
+      throw new Error(`Database error: ${error.message}`);
+    }
     throw new Error('Failed to update user status');
   }
 }
 
 // Get users by status
-export async function getUsersByStatus(status: 'admin' | 'user'): Promise<User[]> {
+export async function getUsersByStatus(status: 'admin' | 'mods' | 'user'): Promise<User[]> {
   try {
     const { rows } = await pool.query<User>(
       'SELECT * FROM users WHERE status = $1 ORDER BY created_at DESC',
@@ -224,6 +301,28 @@ export async function isAdmin(userId: number): Promise<boolean> {
     return user?.status === 'admin';
   } catch (error) {
     console.error('Error checking admin status:', error);
+    return false;
+  }
+}
+
+// Check if user is moderator
+export async function isModerator(userId: number): Promise<boolean> {
+  try {
+    const user = await getUserById(userId);
+    return user?.status === 'mods';
+  } catch (error) {
+    console.error('Error checking moderator status:', error);
+    return false;
+  }
+}
+
+// Check if user is admin or moderator
+export async function isAdminOrModerator(userId: number): Promise<boolean> {
+  try {
+    const user = await getUserById(userId);
+    return user?.status === 'admin' || user?.status === 'mods';
+  } catch (error) {
+    console.error('Error checking admin/moderator status:', error);
     return false;
   }
 }
@@ -267,9 +366,12 @@ export async function verifyUser(email: string, password: string): Promise<User 
     const user = await getUserByEmail(email);
     if (!user) return null;
     
-    // Note: In production, you should hash the password and compare with stored hash
-    // For now, this is a simple comparison (NOT SECURE for production)
-    if (user.password === password) {
+    // Import password utilities
+    const { comparePassword } = await import('./auth/password');
+    
+    // Compare the provided password with the stored hash
+    const isPasswordValid = await comparePassword(password, user.password);
+    if (isPasswordValid) {
       return user;
     }
     

@@ -1,36 +1,98 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { products, Product } from '@/data/products';
+import { useProducts } from '@/hooks/useProducts';
+import { ListPembelian } from '@/types/database';
 import ProductCard from './ProductCard';
+import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+
+// Add Product Card Component
+function AddProductCard() {
+  return (
+    <Link className="group bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-orange-200/50 hover:border-orange-400/70 hover:-translate-y-2 hover:scale-105 cursor-pointer " href="/products/add">
+      
+        {/* Image Container - same size as ProductCard */}
+        <div className="relative  overflow-hidden bg-gradient-to-br from-orange-50 to-cyan-50 flex w-full h-full items-center justify-center">
+          <div className="w-20 h-20 bg-gradient-to-r from-orange-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+        </div>
+      
+    </Link>
+  );
+}
 
 export default function ProductList() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState('name');
-  const [priceRange, setPriceRange] = useState([0, 3000]);
+  const [priceRange] = useState([0, 30000000]); // Increased range for database products
+  const [editMode, setEditMode] = useState(false);
+  const [deletingProducts, setDeletingProducts] = useState<Set<number>>(new Set());
 
-  // Get unique categories
-  const categories = ['All', ...Array.from(new Set(products.map(product => product.kategori)))];
+  // Get products from database
+  const { products, loading, error, fetchProducts } = useProducts();
+  
+  // Get user authentication info
+  const { isAdminOrModerator, tokens } = useAuth();
+
+  // Delete product function
+  const handleDeleteProduct = async (productId: number) => {
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setDeletingProducts(prev => new Set(prev).add(productId));
+      
+      const response = await fetch(`/api/products/${productId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${tokens?.accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete product');
+      }
+
+      // Refresh the products list
+      await fetchProducts();
+      
+      alert('Product deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      alert('Failed to delete product. Please try again.');
+    } finally {
+      setDeletingProducts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(productId);
+        return newSet;
+      });
+    }
+  };
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    let filtered = products.filter((product: Product) => {
+    if (!products) return [];
+
+    const filtered = products.filter((product: ListPembelian) => {
       const matchesSearch = product.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           product.deskripsi.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === 'All' || product.kategori === selectedCategory;
-      const matchesPrice = product.harga >= priceRange[0] && product.harga <= priceRange[1];
+                           (product.deskripsi && product.deskripsi.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesPrice = product.harga && product.harga >= priceRange[0] && product.harga <= priceRange[1];
       
-      return matchesSearch && matchesCategory && matchesPrice;
+      return matchesSearch && matchesPrice;
     });
 
     // Sort products
-    filtered.sort((a: Product, b: Product) => {
+    filtered.sort((a: ListPembelian, b: ListPembelian) => {
       switch (sortBy) {
         case 'price-low':
-          return a.harga - b.harga;
+          return (a.harga || 0) - (b.harga || 0);
         case 'price-high':
-          return b.harga - a.harga;
+          return (b.harga || 0) - (a.harga || 0);
         case 'name':
         default:
           return a.nama.localeCompare(b.nama);
@@ -38,7 +100,7 @@ export default function ProductList() {
     });
 
     return filtered;
-  }, [searchTerm, selectedCategory, sortBy, priceRange]);
+  }, [products, searchTerm, sortBy, priceRange]);
 
   return (
     <section className="relative bg-gradient-to-br from-white via-grey-600 to-cyan-200 overflow-hidden">
@@ -56,16 +118,14 @@ export default function ProductList() {
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold text-orange-400 mb-4">
-          Cari Barang
+          Daftar Pembelian Barang
         </h1>
-        <p className="text-lg text-black max-w-2xl mx-auto">
-          Discover our collection of premium products with the latest technology and innovative design
-        </p>
+        
       </div>
 
       {/* Filters */}
       <div className="bg-white dark:bg-white rounded-2xl shadow-lg p-6 mb-8 border border-orange-500 dark:border-orange-500">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Search */}
           <div className="lg:col-span-2">
             <label className="block text-sm font-medium text-black dark:text-black mb-2">
@@ -83,22 +143,6 @@ export default function ProductList() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-          </div>
-
-          {/* Category Filter */}
-          <div>
-            <label className="block text-sm font-medium text-black dark:text-black mb-2">
-              Category
-            </label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-4 py-3 border  border-gray-300 dark:border-orange-500 rounded-xl focus:ring-orange-500 focus:border-transparent bg-white dark:bg-white text-black dark:text-black placeholder-black dark:placeholder-black"
-            >
-              {categories.map((category: string) => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
           </div>
 
           {/* Sort */}
@@ -146,10 +190,53 @@ export default function ProductList() {
         </div>*/}
       </div>
 
+      {/* Action Buttons - Only for Admin or Moderator */}
+      {isAdminOrModerator && (
+        <div className="flex justify-center gap-4 mb-6">
+          {/* Add Product Button */}
+          <Link href="/products/add">
+            <button className="px-6 py-3 rounded-xl font-medium transition-all duration-300 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Tambah Product
+              </div>
+            </button>
+          </Link>
+
+          {/* Edit Mode Toggle */}
+          <button
+            onClick={() => setEditMode(!editMode)}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              editMode
+                ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-xl'
+                : 'bg-orange-500 hover:bg-orange-600 text-white shadow-lg hover:shadow-xl'
+            }`}
+          >
+            {editMode ? (
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Exit Edit Mode
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit Products
+              </div>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Results Count */}
       <div className="flex items-center justify-between mb-6">
         <p className="text-black">
-          Showing {filteredProducts.length} of {products.length} products
+          {loading ? 'Loading...' : error ? 'Error loading products' : `Showing ${filteredProducts.length} of ${products?.length || 0} products`}
         </p>
         <div className="flex items-center gap-2">
           <span className="text-sm text-black">View:</span>
@@ -167,11 +254,32 @@ export default function ProductList() {
       </div>
 
       {/* Products Grid */}
-      {filteredProducts.length > 0 ? (
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-4 text-black">Loading products...</p>
+        </div>
+      ) : error ? (
+        <div className="text-center py-12">
+          <svg className="mx-auto h-24 w-24 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3 className="mt-4 text-lg font-medium text-black">Error loading products</h3>
+          <p className="mt-2 text-black">Please try again later.</p>
+        </div>
+      ) : filteredProducts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map((product: Product) => (
-            <ProductCard key={product.id} product={product} />
+          {filteredProducts.map((product: ListPembelian) => (
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              editMode={editMode && isAdminOrModerator}
+              onDelete={handleDeleteProduct}
+              isDeleting={deletingProducts.has(product.id)}
+            />
           ))}
+          {/* Add Product Card - Only for Admin or Moderator */}
+          {isAdminOrModerator && <AddProductCard />}
         </div>
       ) : (
         <div className="text-center py-12">
@@ -180,6 +288,12 @@ export default function ProductList() {
           </svg>
           <h3 className="mt-4 text-lg font-medium text-black">No products found</h3>
           <p className="mt-2 text-black">Try adjusting your search or filter criteria.</p>
+          {/* Add Product Card in empty state - Only for Admin or Moderator */}
+          {isAdminOrModerator && (
+            <div className="mt-6">
+              <AddProductCard />
+            </div>
+          )}
         </div>
       )}
       </div>

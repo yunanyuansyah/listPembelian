@@ -5,9 +5,10 @@
  * This script helps you create .env.local file with proper configuration
  */
 
-const fs = require('fs');
-const path = require('path');
-const readline = require('readline');
+import fs from 'fs';
+import path from 'path';
+import readline from 'readline';
+import crypto from 'crypto';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -46,7 +47,7 @@ async function setupEnvironment() {
     }
 
     // Generate NextAuth secret
-    const nextAuthSecret = require('crypto').randomBytes(32).toString('hex');
+    const nextAuthSecret = crypto.randomBytes(32).toString('hex');
 
     // Create environment variables content
     const envContent = `# Database Configuration for Local Development

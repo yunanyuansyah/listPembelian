@@ -2,10 +2,26 @@
 
 import { useState } from 'react';
 
+interface AuthData {
+  user: {
+    id: number;
+    email: string;
+    nama: string;
+    nomor: string;
+    status: 'admin' | 'user';
+    created_at: string;
+    updated_at: string;
+  };
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+  };
+}
+
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLoginSuccess: (user: any) => void;
+  onLoginSuccess: (authData: AuthData) => void;
   onSwitchToRegister: () => void;
 }
 
@@ -50,11 +66,18 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, onSwitchTo
         throw new Error(data.error || 'Login failed');
       }
 
-      onLoginSuccess(data.user);
+      // Pass both user data and tokens to the success callback
+      onLoginSuccess({
+        user: data.user,
+        tokens: {
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken
+        }
+      });
       onClose();
       setFormData({ email: '', password: '' });
-    } catch (error: any) {
-      setError(error.message || 'Terjadi kesalahan saat login');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Terjadi kesalahan saat login');
       console.error('Login error:', error);
     } finally {
       setIsLoading(false);

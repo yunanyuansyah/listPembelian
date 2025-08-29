@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     nomor VARCHAR(20) UNIQUE NOT NULL,
-    status VARCHAR(10) CHECK (status IN ('admin', 'user')) NOT NULL DEFAULT 'user',
+    status VARCHAR(10) CHECK (status IN ('admin', 'user' , 'mods')) NOT NULL DEFAULT 'user',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -24,9 +24,10 @@ CREATE TABLE IF NOT EXISTS listPembelian (
     id SERIAL PRIMARY KEY,
     nama VARCHAR(100) NOT NULL,
     deskripsi VARCHAR(500),
-    harga DECIMAL(10,2),
+    harga DECIMAL(15,2),
     stok INTEGER DEFAULT 0,
-    total_harga DECIMAL(10,2),
+    total_harga DECIMAL(15,2),
+    image_path VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

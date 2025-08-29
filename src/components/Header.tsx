@@ -30,16 +30,20 @@ export default function Header() {
               Home
             </Link>
             {isAuthenticated && (
-              <Link href="/products" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 px-3 py-2 text-sm font-medium transition-colors">
-                Products
-              </Link>
+              <>
+                <Link href="/products" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 px-3 py-2 text-sm font-medium transition-colors">
+                  Products
+                </Link>
+                <Link href="/profile" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 px-3 py-2 text-sm font-medium transition-colors">
+                  Profile
+                </Link>
+                {user?.status === 'admin' && (
+                  <Link href="/admin" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 px-3 py-2 text-sm font-medium transition-colors">
+                    Admin
+                  </Link>
+                )}
+              </>
             )}
-            <a href="#barang" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 px-3 py-2 text-sm font-medium transition-colors">
-              Barang
-            </a>
-            <a href="#" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 px-3 py-2 text-sm font-medium transition-colors">
-              Kategori
-            </a>
             <a href="#" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 px-3 py-2 text-sm font-medium transition-colors">
               Kontak
             </a>
@@ -47,7 +51,7 @@ export default function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Search */}
+            {/* Search 
             <div className="relative">
               <input
                 type="text"
@@ -57,7 +61,7 @@ export default function Header() {
               <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-            </div>
+            </div> */}
 
             {/* User */}
             {isAuthenticated ? (
@@ -109,20 +113,25 @@ export default function Header() {
                 Home
               </Link>
               {isAuthenticated ? (
-                <Link href="/products" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 block px-3 py-2 text-base font-medium">
-                  Products
-                </Link>
+                <>
+                  <Link href="/products" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 block px-3 py-2 text-base font-medium">
+                    Products
+                  </Link>
+                  <Link href="/profile" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 block px-3 py-2 text-base font-medium">
+                    Profile
+                  </Link>
+                  {user?.status === 'admin' && (
+                    <Link href="/admin" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 block px-3 py-2 text-base font-medium">
+                      Admin
+                    </Link>
+                  )}
+                </>
               ) : (
                 <a href="#products" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 block px-3 py-2 text-base font-medium">
                   Products
                 </a>
               )}
-              <a href="#" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 block px-3 py-2 text-base font-medium">
-                Categories
-              </a>
-              <a href="#" className="text-gray-600 dark:text-black hover:text-orange-600 dark:hover:text-orange-400 block px-3 py-2 text-base font-medium">
-                Contact
-              </a>
+              
               {isAuthenticated && (
                 <div className="px-3 py-2 border-t border-gray-200">
                   <div className="text-sm text-gray-600 dark:text-black mb-2">

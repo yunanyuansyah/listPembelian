@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createUser, getUserByEmail } from '@/lib/db';
+import { validatePassword } from '@/lib/auth/password';
+import { generateTokenPair } from '@/lib/auth/jwt';
+import { createAuthResponse } from '@/lib/auth/auth-middleware';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,6 +24,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return NextResponse.json(
+        { error: passwordValidation.message },
+        { status: 400 }
+      );
+    }
+
     // Check if user already exists
     const existingUser = await getUserByEmail(email);
     if (existingUser) {
@@ -30,22 +42,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create new user
+    // Create new user (password will be hashed in createUser function)
     const newUser = await createUser({
       nama,
       email,
-      password, // Note: In production, hash this password
+      password,
       nomor,
       status: 'user'
     });
 
     // Return user without password
-    const { password: _, ...userWithoutPassword } = newUser;
+    const { password: _password, ...userWithoutPassword } = newUser;
     
-    return NextResponse.json({
-      message: 'User created successfully',
-      user: userWithoutPassword
-    });
+    // Generate JWT tokens for automatic login after registration
+    const tokens = generateTokenPair(userWithoutPassword);
+    
+    // Create response with tokens
+    const response = createAuthResponse(
+      true,
+      'User created successfully',
+      userWithoutPassword,
+      tokens
+    );
+    
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('Registration error:', error);

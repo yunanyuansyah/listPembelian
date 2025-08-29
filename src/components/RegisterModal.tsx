@@ -2,10 +2,26 @@
 
 import { useState } from 'react';
 
+interface AuthData {
+  user: {
+    id: number;
+    email: string;
+    nama: string;
+    nomor: string;
+    status: 'admin' | 'user';
+    created_at: string;
+    updated_at: string;
+  };
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+  };
+}
+
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onRegisterSuccess: (user: any) => void;
+  onRegisterSuccess: (authData: AuthData) => void;
   onSwitchToLogin: () => void;
 }
 
@@ -90,7 +106,14 @@ export default function RegisterModal({ isOpen, onClose, onRegisterSuccess, onSw
         throw new Error(data.error || 'Registration failed');
       }
 
-      onRegisterSuccess(data.user);
+      // Pass both user data and tokens to the success callback
+      onRegisterSuccess({
+        user: data.user,
+        tokens: {
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken
+        }
+      });
       onClose();
       setFormData({
         nama: '',
@@ -99,8 +122,8 @@ export default function RegisterModal({ isOpen, onClose, onRegisterSuccess, onSw
         confirmPassword: '',
         nomor: ''
       });
-    } catch (error: any) {
-      setError(error.message || 'Terjadi kesalahan saat mendaftar');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Terjadi kesalahan saat mendaftar');
       console.error('Register error:', error);
     } finally {
       setIsLoading(false);

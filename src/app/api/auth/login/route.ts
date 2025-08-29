@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyUser } from '@/lib/db';
+import { generateTokenPair } from '@/lib/auth/jwt';
+import { createAuthResponse } from '@/lib/auth/auth-middleware';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +16,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify user credentials
+    // Verify user credentials (password comparison is now handled securely with bcrypt)
     const user = await verifyUser(email, password);
     
     if (!user) {
@@ -25,12 +27,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Return user without password
-    const { password: _, ...userWithoutPassword } = user;
+    const { password: _password, ...userWithoutPassword } = user;
     
-    return NextResponse.json({
-      message: 'Login successful',
-      user: userWithoutPassword
-    });
+    // Generate JWT tokens
+    const tokens = generateTokenPair(userWithoutPassword);
+    
+    // Create response with tokens
+    const response = createAuthResponse(
+      true,
+      'Login successful',
+      userWithoutPassword,
+      tokens
+    );
+    
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('Login error:', error);

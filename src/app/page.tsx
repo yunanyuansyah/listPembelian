@@ -1,6 +1,5 @@
 'use client';
 
-import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import ProductList from '@/components/Productlist';
 import Footer from '@/components/Footer';
@@ -11,12 +10,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-grey-600 to-cyan-200">
-      <Header />
       <Hero />
       {isAuthenticated && (
         <main id="products">
           <ProductList />
+          
         </main>
+        
       )}
       
       <Footer />

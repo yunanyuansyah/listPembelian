@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "setup": "node setup-env.js",
@@ -12,8 +12,13 @@
     "db:reset": "echo 'Run: psql -U your_username -d listbarang_db -c \"DROP SCHEMA public CASCADE; CREATE SCHEMA public;\" && npm run db:setup'"
   },
   "dependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.15.5",
+    "bcryptjs": "^3.0.2",
     "dotenv": "^17.2.1",
+    "form-data": "^4.0.4",
+    "jsonwebtoken": "^9.0.2",
     "next": "15.5.2",
     "pg": "^8.16.3",
     "react": "19.1.0",

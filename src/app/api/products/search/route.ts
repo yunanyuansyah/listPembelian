@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     const products = await searchProducts(query);
     return NextResponse.json(products);
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: 'Failed to search products' },
       { status: 500 }

@@ -3,7 +3,11 @@
 import { useState } from 'react';
 import { useProducts } from '@/hooks/useProducts';
 
-export default function AddProductForm() {
+interface AddProductFormProps {
+  onClose?: () => void;
+}
+
+export default function AddProductForm({ onClose }: AddProductFormProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     nama: '',
@@ -27,6 +31,7 @@ export default function AddProductForm() {
         harga: formData.harga ? parseFloat(formData.harga) : null,
         stok: parseInt(formData.stok) || 0,
         total_harga: formData.total_harga ? parseFloat(formData.total_harga) : null,
+        image_path: null,
       });
 
       // Reset form
@@ -38,6 +43,7 @@ export default function AddProductForm() {
         total_harga: '',
       });
       setIsOpen(false);
+      onClose?.();
     } catch (error) {
       console.error('Failed to create product:', error);
     } finally {
@@ -56,9 +62,9 @@ export default function AddProductForm() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+        className="bg-gradient-to-r from-orange-500 to-cyan-500 hover:from-orange-600 hover:to-cyan-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
       >
-        Add New Product
+        + Tambah Product
       </button>
     );
   }
@@ -155,7 +161,10 @@ export default function AddProductForm() {
             </button>
             <button
               type="button"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false);
+                onClose?.();
+              }}
               className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-md font-semibold transition-colors"
             >
               Cancel
