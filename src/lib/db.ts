@@ -4,7 +4,7 @@ import { ListPembelian, User } from '@/types/database';
 // Create a connection pool
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
-  ssl: false, // Set to true if you need SSL in production
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 // Test the connection
