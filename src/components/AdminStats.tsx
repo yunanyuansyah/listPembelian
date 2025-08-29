@@ -49,19 +49,19 @@ export default function AdminStats() {
 
       // Calculate statistics
       const totalUsers = users.length;
-      const totalAdmins = users.filter((user: any) => user.status === 'admin').length;
-      const totalModerators = users.filter((user: any) => user.status === 'mods').length;
+      const totalAdmins = users.filter((user: { status: string }) => user.status === 'admin').length;
+      const totalModerators = users.filter((user: { status: string }) => user.status === 'mods').length;
       const totalProducts = products.length;
 
       // Calculate recent items (last 7 days)
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      const recentUsers = users.filter((user: any) => 
+      const recentUsers = users.filter((user: { created_at: string }) => 
         new Date(user.created_at) > sevenDaysAgo
       ).length;
 
-      const recentProducts = products.filter((product: any) => 
+      const recentProducts = products.filter((product: { created_at: string }) => 
         new Date(product.created_at) > sevenDaysAgo
       ).length;
 

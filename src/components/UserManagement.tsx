@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { User } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface UserWithoutPassword extends Omit<User, 'password'> {}
+type UserWithoutPassword = Omit<User, 'password'>;
 
 export default function UserManagement() {
   const { tokens } = useAuth();

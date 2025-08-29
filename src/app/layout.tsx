@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TechStore - Premium Technology Products",
-  description: "Discover our curated collection of premium technology products with cutting-edge features and innovative design. Shop laptops, smartphones, headphones, and more.",
+  title: "Receipt App",
+  description: "Daftar pembelian barang",
 };
 
 export default function RootLayout({
